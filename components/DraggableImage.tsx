@@ -62,14 +62,13 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imgData.data;
 
-    // Simple threshold algorithm: If pixel is light enough, make it transparent
-    const thresh = 255 - (threshold * 2.55); // Convert 0-100 slider to 255-0 range
+    // Simple threshold algorithm
+    const thresh = 255 - (threshold * 2.55); 
     
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
-      // Brightness calculation
       const brightness = (r + g + b) / 3;
       if (brightness > thresh) {
         data[i + 3] = 0; // Alpha = 0
@@ -84,14 +83,14 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
   // Dragging & Interaction Logic
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging && dragStartRef.current) {
+      if (!dragStartRef.current) return;
+
+      if (isDragging) {
         const dx = (e.clientX - dragStartRef.current.x) / zoom;
         const dy = (e.clientY - dragStartRef.current.y) / zoom;
         setPosition(prev => ({ x: prev.x + dx, y: prev.y + dy }));
         dragStartRef.current = { x: e.clientX, y: e.clientY };
-      }
-      
-      if (isResizing && startDimRef.current && dragStartRef.current) {
+      } else if (isResizing && startDimRef.current) {
         const dx = (e.clientX - dragStartRef.current.x) / zoom;
         const dy = (e.clientY - dragStartRef.current.y) / zoom;
         setSize({
@@ -101,14 +100,39 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
       }
     };
 
-    const handleMouseUp = () => {
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!dragStartRef.current) return;
+      
+      // Stop page scrolling if interacting with image
+      if (isDragging || isResizing) {
+        e.preventDefault();
+      }
+
+      const touch = e.touches[0];
+
+      if (isDragging) {
+        const dx = (touch.clientX - dragStartRef.current.x) / zoom;
+        const dy = (touch.clientY - dragStartRef.current.y) / zoom;
+        setPosition(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+        dragStartRef.current = { x: touch.clientX, y: touch.clientY };
+      } else if (isResizing && startDimRef.current) {
+        const dx = (touch.clientX - dragStartRef.current.x) / zoom;
+        const dy = (touch.clientY - dragStartRef.current.y) / zoom;
+        setSize({
+          width: Math.max(50, startDimRef.current.w + dx),
+          height: Math.max(50, startDimRef.current.h + dy)
+        });
+      }
+    };
+
+    const handleEnd = () => {
       setIsDragging(false);
       setIsResizing(false);
       dragStartRef.current = null;
       startDimRef.current = null;
     };
 
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
         if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
              const target = e.target as HTMLElement;
              if (!target.closest('.control-btn') && !target.closest('.tool-panel')) {
@@ -121,26 +145,24 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
 
     if (isDragging || isResizing) {
       window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('mouseup', handleEnd);
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
+      window.addEventListener('touchend', handleEnd);
     }
     window.addEventListener('mousedown', handleClickOutside);
-    window.addEventListener('touchstart', (e) => {
-         // rudimentary touch click-outside
-         if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-             const target = e.target as HTMLElement;
-             if (!target.closest('.control-btn') && !target.closest('.tool-panel')) {
-                 setIsSelected(false);
-             }
-        }
-    });
+    window.addEventListener('touchstart', handleClickOutside);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleEnd);
       window.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('touchstart', handleClickOutside);
     };
   }, [isDragging, isResizing, zoom]);
 
+  // Mouse Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -156,7 +178,23 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
     startDimRef.current = { w: size.width, h: size.height, x: position.x, y: position.y };
   };
   
-  const handleContainerClick = (e: React.MouseEvent) => {
+  // Touch Handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    setIsDragging(true);
+    const touch = e.touches[0];
+    dragStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleResizeTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    const touch = e.touches[0];
+    dragStartRef.current = { x: touch.clientX, y: touch.clientY };
+    startDimRef.current = { w: size.width, h: size.height, x: position.x, y: position.y };
+  };
+
+  const handleContainerClick = (e: React.MouseEvent | React.TouchEvent) => {
       e.stopPropagation();
       setIsSelected(true);
   };
@@ -176,6 +214,7 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
       }}
       className="group"
       onClick={handleContainerClick}
+      onTouchStart={handleContainerClick}
     >
       {/* ============ CONTROLS TOOLBAR ============ */}
       {showControls && (
@@ -186,6 +225,7 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
              <button 
                 className="control-btn bg-blue-600 text-white p-1.5 rounded text-xs cursor-grab active:cursor-grabbing"
                 onMouseDown={handleMouseDown}
+                onTouchStart={handleTouchStart}
                 title="Move"
              >
                 <ArrowsPointingOutIcon className="w-4 h-4" />
@@ -195,6 +235,7 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
              <button 
                 className={`control-btn p-1.5 rounded text-xs transition-colors ${showMagic ? 'bg-purple-100 text-purple-600' : 'hover:bg-gray-100 text-gray-700'}`}
                 onClick={(e) => { e.stopPropagation(); setShowMagic(!showMagic); setShowCrop(false); }}
+                onTouchEnd={(e) => { e.stopPropagation(); setShowMagic(!showMagic); setShowCrop(false); }}
                 title="Remove Background (Air Signature)"
              >
                 <SparklesIcon className="w-4 h-4" />
@@ -204,6 +245,7 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
              <button 
                 className={`control-btn p-1.5 rounded text-xs transition-colors ${showCrop ? 'bg-green-100 text-green-600' : 'hover:bg-gray-100 text-gray-700'}`}
                 onClick={(e) => { e.stopPropagation(); setShowCrop(!showCrop); setShowMagic(false); }}
+                onTouchEnd={(e) => { e.stopPropagation(); setShowCrop(!showCrop); setShowMagic(false); }}
                 title="Crop"
              >
                 <ScissorsIcon className="w-4 h-4" />
@@ -213,6 +255,7 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
 
              <button
               onClick={(e) => { e.stopPropagation(); onRemove(id); }}
+              onTouchEnd={(e) => { e.stopPropagation(); onRemove(id); }}
               className="control-btn hover:bg-red-100 text-red-500 p-1.5 rounded transition-colors"
               title="Remove"
             >
@@ -282,6 +325,7 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
         <div 
           className="absolute bottom-0 right-0 w-6 h-6 bg-blue-500 cursor-nwse-resize z-50 rounded-tl shadow-md flex items-center justify-center no-print touch-manipulation"
           onMouseDown={handleResizeStart}
+          onTouchStart={handleResizeTouchStart}
         >
           <ArrowPathIcon className="w-3 h-3 text-white transform rotate-90" />
         </div>

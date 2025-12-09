@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { 
   DocumentPlusIcon,
   PhotoIcon,
@@ -12,7 +12,8 @@ import {
   Bars3BottomLeftIcon,
   Bars3Icon,
   Bars3BottomRightIcon,
-  ArrowsPointingInIcon
+  ArrowsPointingInIcon,
+  AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
 
 interface Margins {
@@ -52,6 +53,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onSetMargins
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showMobileMargins, setShowMobileMargins] = useState(false);
 
   const handleFormat = (command: string, value: string | undefined = undefined) => {
     document.execCommand(command, false, value);
@@ -102,7 +104,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   );
 
   return (
-    <div className="flex-shrink-0 bg-[#f3f4f6] border-b border-[#e5e7eb] shadow-sm z-50 flex flex-col no-print select-none">
+    <div className="flex-shrink-0 bg-[#f3f4f6] border-b border-[#e5e7eb] shadow-sm z-50 flex flex-col no-print select-none relative">
       
       <input 
         type="file" 
@@ -112,7 +114,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         className="hidden" 
       />
 
-      {/* Row 1: Main Actions - Responsive Flex/Grid */}
+      {/* Row 1: Main Actions */}
       <div className="flex flex-wrap items-center justify-between p-1.5 md:p-2 border-b border-gray-200 bg-white gap-2">
         
         {/* Left Group: File & Insert */}
@@ -160,7 +162,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
         {/* Right Group: Zoom & Margins */}
         <div className="flex items-center gap-1 md:gap-2 ml-auto">
-           {/* Margins - Collapses on mobile */}
+           {/* Desktop Margins */}
            <div className="hidden xl:flex items-center gap-1 text-xs text-black bg-white px-2 py-1 rounded border border-gray-300 shadow-sm">
               <span className="font-semibold text-[10px] text-gray-500 uppercase">Margin:</span>
               {['top', 'right', 'bottom', 'left'].map((m) => (
@@ -175,10 +177,18 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 </div>
               ))}
            </div>
+           
+           {/* Mobile Margins Toggle */}
+           <button 
+             onClick={() => setShowMobileMargins(!showMobileMargins)}
+             className={`xl:hidden flex items-center justify-center p-1.5 rounded border ${showMobileMargins ? 'bg-blue-50 border-blue-300 text-blue-600' : 'bg-white border-gray-200 text-gray-600'}`}
+             title="Margins"
+           >
+              <AdjustmentsHorizontalIcon className="w-5 h-5" />
+           </button>
 
            <div className="flex items-center gap-0.5 text-xs text-black">
               <button onClick={onZoomOut} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded border border-gray-200 font-bold bg-white text-base cursor-pointer">-</button>
-              {/* Fit button now visible on all screens */}
               <button onClick={onZoomFit} className="flex px-1.5 h-7 items-center justify-center hover:bg-gray-100 rounded border border-gray-200 bg-white cursor-pointer text-[10px] sm:text-xs" title="Fit to Screen">
                 <span className="sm:hidden"><ArrowsPointingInIcon className="w-4 h-4"/></span>
                 <span className="hidden sm:inline">Fit</span>
@@ -187,6 +197,26 @@ export const Toolbar: React.FC<ToolbarProps> = ({
            </div>
         </div>
       </div>
+
+      {/* Mobile Margins Popover */}
+      {showMobileMargins && (
+        <div className="xl:hidden bg-gray-50 border-b border-gray-200 p-2 flex items-center justify-center gap-4 animate-in slide-in-from-top-2">
+            <span className="font-semibold text-xs text-gray-500 uppercase">Margins:</span>
+            <div className="flex gap-2">
+              {['top', 'right', 'bottom', 'left'].map((m) => (
+                <div key={m} className="flex flex-col items-center">
+                  <span className="text-[9px] text-gray-400 uppercase mb-0.5">{m}</span>
+                  <input 
+                    type="number" 
+                    value={margins[m as keyof Margins]} 
+                    onChange={e => handleMarginChange(m as keyof Margins, e.target.value)} 
+                    className="w-10 p-1 border border-gray-300 rounded text-center outline-none bg-white text-black text-xs" 
+                  />
+                </div>
+              ))}
+            </div>
+        </div>
+      )}
 
       {/* Row 2: Formatting - Condensed */}
       <div className="flex items-center px-2 py-1.5 gap-1.5 overflow-x-auto bg-[#f9fafb] no-scrollbar">

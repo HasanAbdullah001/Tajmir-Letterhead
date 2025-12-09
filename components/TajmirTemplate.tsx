@@ -139,7 +139,7 @@ export const TajmirTemplate = forwardRef<HTMLDivElement, TajmirTemplateProps>(({
                 onInput={(e) => handleInput('tajmir_doc_header_h1', e)}
                 contentEditable
                 suppressContentEditableWarning
-                className="font-bold text-4xl tracking-wide leading-none mb-1 outline-none border border-transparent hover:border-gray-200"
+                className="font-serif font-bold text-4xl tracking-wide leading-none mb-1 outline-none border border-transparent hover:border-gray-200"
               >
                 TAJMIR GLOBAL
               </h1>
@@ -265,12 +265,12 @@ export const TajmirTemplate = forwardRef<HTMLDivElement, TajmirTemplateProps>(({
 
          {/* Decorative Bottom Horizontal Strip */}
          <div className="absolute bottom-0 left-0 w-full h-[25px] flex pointer-events-none">
-            {/* Pattern: Green -> Gold -> Green -> Gold -> Green */}
+            {/* Pattern: New Green -> Gold -> Old Green -> Gold -> New Green */}
+            <div className="flex-1" style={{ backgroundColor: 'rgb(47, 91, 16)' }}></div>
+            <div className="flex-1" style={{ backgroundColor: 'rgb(166, 138, 63)' }}></div>
             <div className="flex-1 bg-[#006400]"></div>
-            <div className="flex-1 bg-[#b8860b]"></div>
-            <div className="flex-1 bg-[#006400]"></div>
-            <div className="flex-1 bg-[#b8860b]"></div>
-            <div className="flex-1 bg-[#006400]"></div>
+            <div className="flex-1" style={{ backgroundColor: 'rgb(166, 138, 63)' }}></div>
+            <div className="flex-1" style={{ backgroundColor: 'rgb(47, 91, 16)' }}></div>
          </div>
       </div>
     </div>

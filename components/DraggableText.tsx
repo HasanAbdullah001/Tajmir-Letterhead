@@ -13,7 +13,7 @@ export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, init
   const [position, setPosition] = useState({ x: initialX, y: initialY });
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [isSelected, setIsSelected] = useState(false); // For mobile/click selection
+  const [isSelected, setIsSelected] = useState(false); 
   const dragStartRef = useRef<{ x: number, y: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -39,15 +39,29 @@ export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, init
       dragStartRef.current = { x: e.clientX, y: e.clientY };
     };
 
-    const handleMouseUp = () => {
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging || !dragStartRef.current) return;
+      e.preventDefault(); // Prevent scrolling
+      
+      const touch = e.touches[0];
+      const dx = (touch.clientX - dragStartRef.current.x) / zoom;
+      const dy = (touch.clientY - dragStartRef.current.y) / zoom;
+
+      setPosition(prev => ({
+        x: prev.x + dx,
+        y: prev.y + dy
+      }));
+      
+      dragStartRef.current = { x: touch.clientX, y: touch.clientY };
+    };
+
+    const handleEnd = () => {
       setIsDragging(false);
       dragStartRef.current = null;
     };
 
-    // Close selection when clicking outside
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
         if (contentRef.current && !contentRef.current.contains(e.target as Node)) {
-             // Only deselect if not clicking the move/remove buttons
              const target = e.target as HTMLElement;
              if (!target.closest('.control-btn')) {
                  setIsSelected(false);
@@ -57,15 +71,21 @@ export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, init
 
     if (isDragging) {
       window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('mouseup', handleEnd);
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
+      window.addEventListener('touchend', handleEnd);
     }
     
     window.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('touchstart', handleClickOutside);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleEnd);
       window.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('touchstart', handleClickOutside);
     };
   }, [isDragging, zoom]);
 
@@ -74,8 +94,15 @@ export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, init
     setIsDragging(true);
     dragStartRef.current = { x: e.clientX, y: e.clientY };
   };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    setIsDragging(true);
+    const touch = e.touches[0];
+    dragStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
   
-  const handleContainerClick = (e: React.MouseEvent) => {
+  const handleContainerClick = (e: React.MouseEvent | React.TouchEvent) => {
       e.stopPropagation();
       setIsSelected(true);
   };
@@ -95,6 +122,7 @@ export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, init
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleContainerClick}
+      onTouchStart={handleContainerClick}
     >
       {/* Controls Container */}
       {showControls && (
@@ -102,12 +130,17 @@ export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, init
           <div 
             className="control-btn bg-blue-600 text-white px-3 py-1 rounded-md text-xs uppercase font-bold tracking-wider cursor-grab active:cursor-grabbing flex items-center gap-1 shadow-md select-none touch-manipulation"
             onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
           >
             <ArrowsPointingOutIcon className="w-4 h-4" />
             <span className="hidden sm:inline">Move</span>
           </div>
           <button
             onClick={(e) => {
+                e.stopPropagation();
+                onRemove(id);
+            }}
+            onTouchEnd={(e) => {
                 e.stopPropagation();
                 onRemove(id);
             }}
