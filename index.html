@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Tajmir Group Letterhead</title>
+    <!-- Keep Tailwind CDN for simplicity to match existing styling logic -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -38,19 +39,21 @@
   <script type="importmap">
 {
   "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
     "react": "https://aistudiocdn.com/react@^19.2.1",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
     "html2canvas": "https://aistudiocdn.com/html2canvas@^1.4.1",
-    "@heroicons/react/": "https://aistudiocdn.com/@heroicons/react@^2.2.0/",
     "jspdf": "https://aistudiocdn.com/jspdf@^3.0.4",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.2",
-    "vite": "https://aistudiocdn.com/vite@^7.2.7"
+    "@heroicons/react/": "https://aistudiocdn.com/@heroicons/react@^2.2.0/",
+    "vite": "https://aistudiocdn.com/vite@^7.2.7",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>
 </head>
   <body class="bg-[#333] overflow-hidden">
     <div id="root"></div>
+    <!-- CRITICAL: Entry point for Vite build -->
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

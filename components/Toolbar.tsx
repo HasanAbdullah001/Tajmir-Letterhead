@@ -11,7 +11,8 @@ import {
   ListBulletIcon as ListNumberIcon,
   Bars3BottomLeftIcon,
   Bars3Icon,
-  Bars3BottomRightIcon
+  Bars3BottomRightIcon,
+  ArrowsPointingInIcon
 } from '@heroicons/react/24/outline';
 
 interface Margins {
@@ -177,7 +178,11 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
            <div className="flex items-center gap-0.5 text-xs text-black">
               <button onClick={onZoomOut} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded border border-gray-200 font-bold bg-white text-base cursor-pointer">-</button>
-              <button onClick={onZoomFit} className="hidden sm:flex px-2 h-7 items-center justify-center hover:bg-gray-100 rounded border border-gray-200 bg-white cursor-pointer text-[10px]" title="Fit">Fit</button>
+              {/* Fit button now visible on all screens */}
+              <button onClick={onZoomFit} className="flex px-1.5 h-7 items-center justify-center hover:bg-gray-100 rounded border border-gray-200 bg-white cursor-pointer text-[10px] sm:text-xs" title="Fit to Screen">
+                <span className="sm:hidden"><ArrowsPointingInIcon className="w-4 h-4"/></span>
+                <span className="hidden sm:inline">Fit</span>
+              </button>
               <button onClick={onZoomIn} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded border border-gray-200 font-bold bg-white text-base cursor-pointer">+</button>
            </div>
         </div>
