@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Tajmir Group Letterhead</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              tajmir: {
+                gold: '#b8860b',
+                dark: '#2c2c2c',
+                gray: '#525659'
+              }
+            },
+            fontFamily: {
+              serif: ['Georgia', 'Times New Roman', 'serif'],
+              sans: ['ui-sans-serif', 'system-ui', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Print Overrides */
+      @media print {
+        @page { size: A4; margin: 0; }
+        body { background-color: white; }
+        .no-print { display: none !important; }
+        .print-only { display: block !important; }
+        /* Ensure background graphics print */
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "html2canvas": "https://aistudiocdn.com/html2canvas@^1.4.1",
+    "@heroicons/react/": "https://aistudiocdn.com/@heroicons/react@^2.2.0/",
+    "jspdf": "https://aistudiocdn.com/jspdf@^3.0.4",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.2",
+    "vite": "https://aistudiocdn.com/vite@^7.2.7"
+  }
+}
+</script>
+</head>
+  <body class="bg-[#333] overflow-hidden">
+    <div id="root"></div>
+  </body>
+</html>
