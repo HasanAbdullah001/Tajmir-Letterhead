@@ -121,17 +121,54 @@ export const LetterheadWorkspace = forwardRef<HTMLDivElement, WorkspaceProps>(({
     };
   }, [zoom, onSetZoom]);
 
+  // Mobile Pinch Zoom Logic
+  const touchDistanceRef = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      touchDistanceRef.current = dist;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchDistanceRef.current !== null) {
+      e.preventDefault();
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const delta = dist - touchDistanceRef.current;
+
+      if (Math.abs(delta) > 10) {
+        const zoomDelta = delta * 0.005;
+        onSetZoom(Math.max(0.2, Math.min(3.0, zoom + zoomDelta)));
+        touchDistanceRef.current = dist;
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchDistanceRef.current = null;
+  };
+
   return (
     <div
       ref={containerRef}
       id="zoom-container"
-      className="flex-grow overflow-auto bg-[#404040] p-8 text-center touch-none flex items-start justify-center"
+      className="flex-grow overflow-auto bg-[#404040] p-8 text-center touch-pan-y flex items-start justify-center"
       style={{
         backgroundImage: 'radial-gradient(#4a4a4a 1px, transparent 1px)',
         backgroundSize: '20px 20px'
       }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       onClick={(e) => {
-        // Deselect if clicking background?
+        // Deselect logic
       }}
     >
       <div
@@ -159,7 +196,7 @@ export const LetterheadWorkspace = forwardRef<HTMLDivElement, WorkspaceProps>(({
                     }
                   }
                 }}
-                className="absolute -right-12 top-0 bg-red-100 text-red-600 p-2 rounded-full shadow hover:bg-red-200 opacity-0 group-hover:opacity-100 transition-opacity no-print z-50"
+                className="absolute -right-12 top-0 bg-red-100 text-red-600 p-2 rounded-full shadow hover:bg-red-200 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity no-print z-50"
                 title="Delete Page"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">

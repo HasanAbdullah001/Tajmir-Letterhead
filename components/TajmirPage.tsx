@@ -1,4 +1,4 @@
-import React, { forwardRef, useState, useEffect, useRef } from 'react';
+﻿import React, { forwardRef, useState, useEffect, useRef } from 'react';
 import { DraggableText } from './DraggableText';
 import { DraggableImage } from './DraggableImage';
 
@@ -18,6 +18,7 @@ interface TajmirPageProps {
   onContentOverflow?: (pageId: string) => void;
   isActive?: boolean;
   onFocus?: () => void;
+  maxLines: number;
 }
 
 export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
@@ -28,7 +29,8 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
   margins,
   onContentOverflow,
   isActive,
-  onFocus
+  onFocus,
+  maxLines
 }, ref) => {
   // Draggable State - Local to each page for now
   const [textBlocks, setTextBlocks] = useState<Array<{ id: number, x: number, y: number }>>([]);
@@ -163,13 +165,23 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
   const checkOverflow = () => {
     if (!bodyRef.current || !onContentOverflow) return;
 
-    // We check if content height exceeds the container height
-    // Container is flex-grow, bounded by page margins padding.
-    // bodyRef is 100% height.
-    // If text overflows, scrollHeight > clientHeight
-    if (bodyRef.current.scrollHeight > bodyRef.current.clientHeight) {
-      onContentOverflow(id);
-    }
+    // Use a small delay to let the DOM update
+    requestAnimationFrame(() => {
+      if (!bodyRef.current) return;
+
+      // 1. Physical Overflow - check if content is taller than container
+      const isPhysicalOverflow = bodyRef.current.scrollHeight > bodyRef.current.clientHeight;
+
+      // 2. Line Count Overflow
+      const style = window.getComputedStyle(bodyRef.current);
+      const lineHeight = parseFloat(style.lineHeight) || 16;
+      const currentLines = Math.floor(bodyRef.current.scrollHeight / lineHeight);
+
+      // Trigger overflow if EITHER condition is met
+      if (isPhysicalOverflow || currentLines > maxLines) {
+        onContentOverflow(id);
+      }
+    });
   };
 
   const handleBodyInput = (e: React.FormEvent<HTMLElement>) => {
@@ -305,52 +317,37 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
       <div className="mt-auto relative w-full z-10 flex-shrink-0">
 
         {/* Footer Info Area - Shared content */}
+        {/* Footer Info Area - Shared content */}
         <div className="pb-5 pt-2 text-center relative flex flex-col items-center">
-          <h2
+          <p
             ref={footerTitleRef}
             onInput={(e) => handleInput('tajmir_doc_footer_title', e, true)}
             contentEditable
             suppressContentEditableWarning
-            className="text-[#2c2c2c] font-bold text-sm tracking-[0.15em] mb-1 uppercase outline-none border border-transparent hover:border-gray-200"
+            className="text-[9px] font-serif font-bold text-gray-600 leading-tight mb-0.5 outline-none border border-transparent hover:border-gray-200"
           >
-            Tajmir Global Corporation
-          </h2>
-          <div className="text-[9px] font-serif font-medium text-gray-600 leading-tight uppercase tracking-wider flex flex-col items-center gap-0.5">
-            <p
-              ref={footerAddr1Ref}
-              onInput={(e) => handleInput('tajmir_doc_footer_addr1', e, true)}
-              contentEditable
-              suppressContentEditableWarning
-              className="outline-none border border-transparent hover:border-gray-200"
-            >
-              950/B, Yakub-Ayub Building,
-            </p>
-            <p
-              ref={footerAddr2Ref}
-              onInput={(e) => handleInput('tajmir_doc_footer_addr2', e, true)}
-              contentEditable
-              suppressContentEditableWarning
-              className="outline-none border border-transparent hover:border-gray-200"
-            >
-              Amir Market, Khatungonj, Chattogram.
-            </p>
-            <p
-              ref={footerPhoneRef}
-              onInput={(e) => handleInput('tajmir_doc_footer_phone', e, true)}
-              contentEditable
-              suppressContentEditableWarning
-              className="mt-0.5 text-black font-bold text-[10px] tracking-widest outline-none border border-transparent hover:border-gray-200"
-            >
-              01843601712, 01755880400
-            </p>
-          </div>
+            TAJMIR GLOBAL CORPORATION
+          </p>
+          <p
+            ref={footerAddr1Ref}
+            onInput={(e) => handleInput('tajmir_doc_footer_unified', e, true)}
+            contentEditable
+            suppressContentEditableWarning
+            className="text-[9px] font-serif font-medium text-gray-600 leading-tight outline-none border border-transparent hover:border-gray-200 text-center px-8"
+          >
+            950/B, Yakub-Ayub Building Amir Market, Khatungonj, Chattogram, 01843601712 or 01755880400
+          </p>
         </div>
 
         {/* Decorative Bottom Horizontal Strip - Pinned Absolute */}
-        <div className="absolute bottom-0 left-0 w-full h-[6px] flex pointer-events-none">
+        <div className="absolute bottom-0 left-0 w-full h-[12px] flex pointer-events-none">
           <div className="flex-1" style={{ backgroundColor: 'rgb(47, 91, 16)' }}></div>
           <div className="flex-1" style={{ backgroundColor: 'rgb(166, 138, 63)' }}></div>
           <div className="flex-1 bg-[#006400]"></div>
+          <div className="flex-1" style={{ backgroundColor: 'rgb(166, 138, 63)' }}></div>
+          <div className="flex-1" style={{ backgroundColor: 'rgb(47, 91, 16)' }}></div>
+          <div className="flex-1" style={{ backgroundColor: 'rgb(166, 138, 63)' }}></div>
+          <div className="flex-1" style={{ backgroundColor: 'rgb(0, 100, 0)' }}></div>
           <div className="flex-1" style={{ backgroundColor: 'rgb(166, 138, 63)' }}></div>
           <div className="flex-1" style={{ backgroundColor: 'rgb(47, 91, 16)' }}></div>
         </div>

@@ -31,6 +31,8 @@ interface ToolbarProps {
   isProcessing: boolean;
   margins: Margins;
   onSetMargins: (m: Margins) => void;
+  maxLines: number;
+  onSetMaxLines: (lines: number) => void;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -46,7 +48,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onAddImage,
   isProcessing,
   margins,
-  onSetMargins
+  onSetMargins,
+  maxLines,
+  onSetMaxLines
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mergeInputRef = useRef<HTMLInputElement>(null);
@@ -165,6 +169,17 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
         {/* Right Group: Zoom & Margins */}
         <div className="flex items-center gap-1 md:gap-2 ml-auto">
+          {/* Max Lines */}
+          <div className="hidden xl:flex items-center gap-1 text-xs text-black bg-white px-2 py-1 rounded border border-gray-300 shadow-sm">
+            <span className="font-semibold text-[10px] text-gray-500 uppercase">Lines:</span>
+            <input
+              type="number"
+              value={maxLines}
+              onChange={(e) => onSetMaxLines(parseInt(e.target.value) || 29)}
+              className="w-10 p-0.5 border border-gray-300 rounded text-center outline-none bg-white text-black text-[10px]"
+            />
+          </div>
+
           {/* Desktop Margins */}
           <div className="hidden xl:flex items-center gap-1 text-xs text-black bg-white px-2 py-1 rounded border border-gray-300 shadow-sm">
             <span className="font-semibold text-[10px] text-gray-500 uppercase">Margin:</span>

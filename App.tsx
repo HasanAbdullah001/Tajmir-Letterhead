@@ -249,6 +249,9 @@ export default function App() {
     }
   };
 
+  // Max lines per page (default 29)
+  const [maxLines, setMaxLines] = useState(29);
+
   return (
     <div className="flex flex-col h-screen bg-[#333] overflow-hidden font-sans">
       <Toolbar
@@ -265,6 +268,8 @@ export default function App() {
         isProcessing={isProcessing}
         margins={margins}
         onSetMargins={setMargins}
+        maxLines={maxLines}
+        onSetMaxLines={setMaxLines}
       />
 
       <LetterheadWorkspace
@@ -273,6 +278,7 @@ export default function App() {
         onSetZoom={setZoom}
         action={action}
         margins={margins}
+        maxLines={maxLines}
       />
 
       {toastMsg && <Toast message={toastMsg} />}

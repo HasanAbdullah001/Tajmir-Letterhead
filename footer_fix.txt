@@ -1,0 +1,21 @@
+         {/* Footer Info Area - Shared content */}
+         <div className="pb-5 pt-2 text-center relative flex flex-col items-center">
+            <p 
+              ref={footerTitleRef}
+              onInput={(e) => handleInput('tajmir_doc_footer_title', e, true)}
+              contentEditable
+              suppressContentEditableWarning
+              className="text-[9px] font-serif font-bold text-gray-600 leading-tight mb-0.5 outline-none border border-transparent hover:border-gray-200"
+            >
+              Tajmir Global Corporation
+            </p>
+            <p 
+              ref={footerAddr1Ref}
+              onInput={(e) => handleInput('tajmir_doc_footer_unified', e, true)}
+              contentEditable 
+              suppressContentEditableWarning 
+              className="text-[9px] font-serif font-medium text-gray-600 leading-tight outline-none border border-transparent hover:border-gray-200 text-center px-8"
+            >
+              950/B, Yakub-Ayub Building Amir Market, Khatungonj, Chattogram, 01843601712 or 01755880400
+            </p>
+         </div>
