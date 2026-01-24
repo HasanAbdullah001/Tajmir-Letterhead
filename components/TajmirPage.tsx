@@ -32,6 +32,43 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
   onFocus,
   maxLines
 }, ref) => {
+  // Logo Options
+  const LOGO_OPTIONS = [
+    '/tajmir-header-new.png',
+    '/tajmir-header-opt2.png',
+    '/tajmir-header-opt3.png'
+  ];
+
+  // Header Logo State - Global persistence across pages? 
+  // Ideally this should be shared, but since TajmirPage is individual, we use localStorage to sync on mount/update.
+  const [logoIndex, setLogoIndex] = useState(() => {
+    const saved = localStorage.getItem('tajmir_header_logo_index');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  const handleHeaderClick = () => {
+    const nextIndex = (logoIndex + 1) % LOGO_OPTIONS.length;
+    setLogoIndex(nextIndex);
+    localStorage.setItem('tajmir_header_logo_index', nextIndex.toString());
+    // Note: This won't automatically update other pages until they re-render or listen to storage. 
+    // Since pages are usually mounted together, we might want a way to force update?
+    // For now, simple state local to component but persisted is fine. 
+    // If the user clicks on Page 1, Page 2 won't update instantly unless we lift state.
+    // Given the request "remember users last chose", persistence is key.
+    // To sync instantly, we can dispatch a custom event or use window listener.
+    window.dispatchEvent(new Event('tajmir_logo_change'));
+  };
+
+  // Listen for storage/custom changes to sync logos across pages
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('tajmir_header_logo_index');
+      if (saved) setLogoIndex(parseInt(saved, 10));
+    };
+    window.addEventListener('tajmir_logo_change', handleStorageChange);
+    return () => window.removeEventListener('tajmir_logo_change', handleStorageChange);
+  }, []);
+
   // Draggable State - Local to each page for now
   const [textBlocks, setTextBlocks] = useState<Array<{ id: number, x: number, y: number, content?: string }>>([]);
   const [imageBlocks, setImageBlocks] = useState<Array<{ id: number, src: string, x: number, y: number, width?: number, height?: number, crop?: any }>>([]);
@@ -175,11 +212,13 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
       <div className="pt-10 px-12 pb-2 relative z-10">
         <div className="flex items-center justify-end">
           <img
-            src="/tajmir-header-new.png"
+            src={LOGO_OPTIONS[logoIndex]}
             alt="Tajmir Global Corporation"
             style={{ height: '90px', width: 'auto' }}
-            className="object-contain"
+            className="object-contain cursor-pointer hover:opacity-90 transition-opacity"
             crossOrigin="anonymous"
+            onClick={handleHeaderClick}
+            title="Click to alternate logo"
           />
         </div>
       </div>
