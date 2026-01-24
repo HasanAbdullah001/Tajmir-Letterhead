@@ -33,6 +33,8 @@ interface ToolbarProps {
   onSetMargins: (m: Margins) => void;
   maxLines: number;
   onSetMaxLines: (lines: number) => void;
+  onSaveLetter: () => void;
+  onLetterList: () => void;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -50,7 +52,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   margins,
   onSetMargins,
   maxLines,
-  onSetMaxLines
+  onSetMaxLines,
+  onSaveLetter,
+  onLetterList
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mergeInputRef = useRef<HTMLInputElement>(null);
@@ -101,6 +105,24 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           >
             <DocumentPlusIcon className="w-5 h-5 text-blue-600" />
             <span className="hidden lg:inline">New</span>
+          </button>
+
+          <button
+            onClick={onSaveLetter}
+            className="flex items-center justify-center gap-1 px-2 py-1.5 rounded text-xs md:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-blue-700 cursor-pointer"
+            title="Save Letter to Cloud"
+          >
+            💾
+            <span className="hidden lg:inline">Save</span>
+          </button>
+
+          <button
+            onClick={onLetterList}
+            className="flex items-center justify-center gap-1 px-2 py-1.5 rounded text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-100 border border-gray-300 cursor-pointer"
+            title="Letter List"
+          >
+            📋
+            <span className="hidden lg:inline">Letters</span>
           </button>
 
           <div className="h-5 w-px bg-gray-300 mx-1 hidden md:block"></div>

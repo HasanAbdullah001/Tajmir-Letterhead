@@ -1,0 +1,14 @@
+name = "letterhead-api"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# IMPORTANT: After creating your KV namespace, update the 'id' below
+# Run: wrangler kv:namespace create "LETTERS"
+# Then copy the ID shown and paste it here
+
+[[kv_namespaces]]
+binding = "LETTERS"
+id = "YOUR_KV_NAMESPACE_ID_HERE"  # Replace this after running wrangler kv:namespace create
+
+[env.production]
+vars = { ENVIRONMENT = "production" }
