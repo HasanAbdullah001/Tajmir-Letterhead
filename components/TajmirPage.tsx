@@ -38,20 +38,14 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
 
   // Refs for persistent content
   const bodyRef = useRef<HTMLDivElement>(null);
-  const headerH1Ref = useRef<HTMLHeadingElement>(null);
-  const headerH2Ref = useRef<HTMLHeadingElement>(null);
-  const headerSubRef = useRef<HTMLParagraphElement>(null);
+
+  // Footer Refs
   const footerTitleRef = useRef<HTMLHeadingElement>(null);
   const footerAddr1Ref = useRef<HTMLParagraphElement>(null);
-  const footerAddr2Ref = useRef<HTMLParagraphElement>(null);
-  const footerPhoneRef = useRef<HTMLParagraphElement>(null);
 
   // Load Content from LocalStorage on Mount
   useEffect(() => {
-    // We share the HEADER and FOOTER content across all pages (or typically letterhead is same)
-    // BUT the Body is unique per page.
     const loadSharedContent = (key: string, ref: React.RefObject<HTMLElement | null>) => {
-      // Shared content uses a generic key
       const saved = localStorage.getItem(key);
       if (saved && ref.current) {
         ref.current.innerHTML = saved;
@@ -59,26 +53,20 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
     };
 
     const loadPageContent = (key: string, ref: React.RefObject<HTMLElement | null>) => {
-      // Page specific content
       const saved = localStorage.getItem(key);
       if (saved && ref.current) {
         ref.current.innerHTML = saved;
       }
     };
 
-    // Shared Header/Footer
-    loadSharedContent('tajmir_doc_header_h1', headerH1Ref);
-    loadSharedContent('tajmir_doc_header_h2', headerH2Ref);
-    loadSharedContent('tajmir_doc_header_sub', headerSubRef);
+    // Shared Footer
     loadSharedContent('tajmir_doc_footer_title', footerTitleRef);
-    loadSharedContent('tajmir_doc_footer_addr1', footerAddr1Ref);
-    loadSharedContent('tajmir_doc_footer_addr2', footerAddr2Ref);
-    loadSharedContent('tajmir_doc_footer_phone', footerPhoneRef);
+    loadSharedContent('tajmir_doc_footer_unified', footerAddr1Ref);
 
     // Unique Body for this page
     loadPageContent(`tajmir_doc_body_${id}`, bodyRef);
 
-    // Load Draggables - keeping unique per page
+    // Load Draggables
     try {
       const savedTextBlocks = localStorage.getItem(`tajmir_doc_draggables_text_${id}`);
       if (savedTextBlocks) setTextBlocks(JSON.parse(savedTextBlocks));
@@ -133,59 +121,23 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
   const handleInput = (key: string, e: React.FormEvent<HTMLElement>, isShared: boolean = false) => {
     const target = e.currentTarget;
     localStorage.setItem(key, target.innerHTML);
-
-    // If shared content changes, we might want to update other pages in real-time?
-    // For now, let's keep it simple. LocalStorage update is enough for persistence.
-    // Real-time sync across pages would require lifting state up, but contentEditable is hard to control.
   };
 
-  // Auto-focus logic when page becomes active
-  useEffect(() => {
-    if (isActive && onFocus && bodyRef.current) {
-      // Only focus if we are not already focused on something else in this page?
-      // Or blindly focus body if nothing is focused?
-      // We generally want to focus the body when entering a new page via auto-flow.
-      // But we don't want to steal focus if user clicked a specific element.
-      // Let's assume onFocus prop handles "setting active", but internal focus is separate.
-
-      // Actually, if isActive is true, and it wasn't before, we might want to focus the body.
-      // We can pass a prop like 'shouldFocusOnMount' or just check if it's empty?
-      // Let's rely on user click for focus usually, but for Auto-flow (new page), we want to focus.
-
-      // Strategy: If isActive is true, we don't force focus unless it's a new page?
-      // Let's add a mechanism.
-    }
-  }, [isActive]);
-
-  // Actually, we can just expose a method or rely on the parent logic.
-  // But simpler: If the user is typing and hits overflow, parent adds page.
-  // Parent sets new page as active.
-  // If we detect we just became active and we are the last page (highest ID?), we could focus.
-  // Let's keep it simple: `useEffect` with `isActive`.
+  // Auto-focus logic
   useEffect(() => {
     if (isActive && bodyRef.current) {
-      // Focus at start if empty, or end? 
-      // When flowing, we want start.
       bodyRef.current.focus();
     }
   }, [isActive]);
 
   const checkOverflow = () => {
     if (!bodyRef.current || !onContentOverflow) return;
-
-    // Use a small delay to let the DOM update
     requestAnimationFrame(() => {
       if (!bodyRef.current) return;
-
-      // 1. Physical Overflow - check if content is taller than container
       const isPhysicalOverflow = bodyRef.current.scrollHeight > bodyRef.current.clientHeight;
-
-      // 2. Line Count Overflow
       const style = window.getComputedStyle(bodyRef.current);
       const lineHeight = parseFloat(style.lineHeight) || 16;
       const currentLines = Math.floor(bodyRef.current.scrollHeight / lineHeight);
-
-      // Trigger overflow if EITHER condition is met
       if (isPhysicalOverflow || currentLines > maxLines) {
         onContentOverflow(id);
       }
@@ -194,7 +146,6 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
 
   const handleBodyInput = (e: React.FormEvent<HTMLElement>) => {
     handleInput(`tajmir_doc_body_${id}`, e);
-    // Debounce overflow check?
     checkOverflow();
   };
 
@@ -222,50 +173,14 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
 
       {/* ================= HEADER ================= */}
       <div className="pt-10 px-12 pb-2 relative z-10">
-        <div className="flex items-center justify-end gap-5">
-
-          {/* Logo - Reduced Size */}
-          <div className="relative flex-shrink-0">
-            <img
-              src="https://tajmir-images.pages.dev/Logo%20black.png"
-              alt="Tajmir Group"
-              style={{ height: '70px', width: 'auto' }}
-              className="object-contain"
-              crossOrigin="anonymous"
-            />
-          </div>
-
-          {/* Company Name & Subtext - Reduced Size */}
-          <div className="text-left font-sans text-black flex flex-col justify-center">
-            <h1
-              ref={headerH1Ref}
-              onInput={(e) => handleInput('tajmir_doc_header_h1', e, true)}
-              contentEditable
-              suppressContentEditableWarning
-              className="font-serif font-bold text-2xl leading-none mb-1 outline-none border border-transparent hover:border-gray-200"
-            >
-              TAJMIR GLOBAL
-            </h1>
-            <h2
-              ref={headerH2Ref}
-              onInput={(e) => handleInput('tajmir_doc_header_h2', e, true)}
-              contentEditable
-              suppressContentEditableWarning
-              className="text-lg font-normal tracking-wide leading-none mb-1 outline-none border border-transparent hover:border-gray-200"
-            >
-              CORPORATION
-            </h2>
-            <p
-              ref={headerSubRef}
-              onInput={(e) => handleInput('tajmir_doc_header_sub', e, true)}
-              contentEditable
-              suppressContentEditableWarning
-              className="italic text-xs text-black outline-none border border-transparent hover:border-gray-200"
-            >
-              A Concern of Tajmir Group
-            </p>
-          </div>
-
+        <div className="flex items-center justify-end">
+          <img
+            src="/tajmir-header-new.png"
+            alt="Tajmir Global Corporation"
+            style={{ height: '90px', width: 'auto' }}
+            className="object-contain"
+            crossOrigin="anonymous"
+          />
         </div>
       </div>
 
@@ -366,7 +281,7 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
           <div className="flex-1" style={{ backgroundColor: 'rgb(47, 91, 16)' }}></div>
         </div>
       </div>
-    </div>
+    </div >
   );
 });
 
