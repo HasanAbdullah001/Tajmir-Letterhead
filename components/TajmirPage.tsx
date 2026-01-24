@@ -33,8 +33,8 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
   maxLines
 }, ref) => {
   // Draggable State - Local to each page for now
-  const [textBlocks, setTextBlocks] = useState<Array<{ id: number, x: number, y: number }>>([]);
-  const [imageBlocks, setImageBlocks] = useState<Array<{ id: number, src: string, x: number, y: number }>>([]);
+  const [textBlocks, setTextBlocks] = useState<Array<{ id: number, x: number, y: number, content?: string }>>([]);
+  const [imageBlocks, setImageBlocks] = useState<Array<{ id: number, src: string, x: number, y: number, width?: number, height?: number, crop?: any }>>([]);
 
   // Refs for persistent content
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -119,6 +119,14 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
 
   const removeImageBlock = (id: number) => {
     setImageBlocks(prev => prev.filter(b => b.id !== id));
+  };
+
+  const handleUpdateText = (id: number, data: any) => {
+    setTextBlocks(prev => prev.map(b => b.id === id ? { ...b, ...data } : b));
+  };
+
+  const handleUpdateImage = (id: number, data: any) => {
+    setImageBlocks(prev => prev.map(b => b.id === id ? { ...b, ...data } : b));
   };
 
   // Helper to persist edits
@@ -294,8 +302,12 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
             src={block.src}
             initialX={block.x}
             initialY={block.y}
+            initialWidth={block.width}
+            initialHeight={block.height}
+            initialCrop={block.crop}
             zoom={zoom}
             onRemove={removeImageBlock}
+            onUpdate={handleUpdateImage}
           />
         ))}
 
@@ -306,8 +318,10 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
             id={block.id}
             initialX={block.x}
             initialY={block.y}
+            initialContent={block.content}
             zoom={zoom}
             onRemove={removeTextBlock}
+            onUpdate={handleUpdateText}
           />
         ))}
 

@@ -13,20 +13,26 @@ interface DraggableImageProps {
   src: string;
   initialX: number;
   initialY: number;
+  initialWidth?: number;
+  initialHeight?: number;
+  initialCrop?: { t: number; r: number; b: number; l: number };
   zoom: number;
   onRemove: (id: number) => void;
+  onUpdate?: (id: number, data: any) => void;
 }
 
-export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initialX, initialY, zoom, onRemove }) => {
+export const DraggableImage: React.FC<DraggableImageProps> = ({
+  id, src, initialX, initialY, initialWidth, initialHeight, initialCrop, zoom, onRemove, onUpdate
+}) => {
   const [position, setPosition] = useState({ x: initialX, y: initialY });
-  const [size, setSize] = useState({ width: 200, height: 200 });
+  const [size, setSize] = useState({ width: initialWidth || 200, height: initialHeight || 200 });
   const [processedSrc, setProcessedSrc] = useState(src);
 
   // Controls state
   const [showMagic, setShowMagic] = useState(false);
   const [showCrop, setShowCrop] = useState(false);
   const [threshold, setThreshold] = useState(0);
-  const [crop, setCrop] = useState({ t: 0, r: 0, b: 0, l: 0 });
+  const [crop, setCrop] = useState(initialCrop || { t: 0, r: 0, b: 0, l: 0 });
   const [lockAspect, setLockAspect] = useState(true);
 
   const [isDragging, setIsDragging] = useState(false);
@@ -157,6 +163,18 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
       setIsResizing(false);
       dragStartRef.current = null;
       startDimRef.current = null;
+
+      // Notify parent of update
+      if (onUpdate) {
+        onUpdate(id, {
+          x: position.x,
+          y: position.y,
+          width: size.width,
+          height: size.height,
+          crop,
+          src: processedSrc // If we want to save magical changes
+        });
+      }
     };
 
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
@@ -230,6 +248,21 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
     };
     img.src = processedSrc;
   }, [processedSrc, crop, size, zoom]);
+
+  // Notify parent when crop or processedSrc changes (debounced or effect?)
+  // Since crop changes via input, we should update parent.
+  useEffect(() => {
+    if (onUpdate && (crop.t !== 0 || crop.r !== 0 || crop.b !== 0 || crop.l !== 0 || processedSrc !== src)) {
+      onUpdate(id, {
+        x: position.x,
+        y: position.y,
+        width: size.width,
+        height: size.height,
+        crop,
+        src: processedSrc
+      });
+    }
+  }, [crop, processedSrc]); // position/size handled in handleEnd to avoid spam
 
   // Mouse Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -305,7 +338,6 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
             <button
               className={`control-btn p-2 rounded-full transition-all active:scale-95 ${showMagic ? 'bg-purple-500 text-white' : 'hover:bg-white/20 text-white'}`}
               onClick={(e) => { e.stopPropagation(); setShowMagic(!showMagic); setShowCrop(false); }}
-              onTouchEnd={(e) => { e.stopPropagation(); setShowMagic(!showMagic); setShowCrop(false); }}
               title="Remove Background"
             >
               <SparklesIcon className="w-5 h-5" />
@@ -314,7 +346,6 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
             <button
               className={`control-btn p-2 rounded-full transition-all active:scale-95 ${showCrop ? 'bg-green-500 text-white' : 'hover:bg-white/20 text-white'}`}
               onClick={(e) => { e.stopPropagation(); setShowCrop(!showCrop); setShowMagic(false); }}
-              onTouchEnd={(e) => { e.stopPropagation(); setShowCrop(!showCrop); setShowMagic(false); }}
               title="Crop"
             >
               <ScissorsIcon className="w-5 h-5" />
@@ -323,7 +354,6 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
             <button
               className={`control-btn p-2 rounded-full transition-all active:scale-95 ${lockAspect ? 'bg-orange-500 text-white' : 'hover:bg-white/20 text-white'}`}
               onClick={(e) => { e.stopPropagation(); setLockAspect(!lockAspect); }}
-              onTouchEnd={(e) => { e.stopPropagation(); setLockAspect(!lockAspect); }}
               title={lockAspect ? "Unlock Aspect Ratio" : "Lock Aspect Ratio"}
             >
               {lockAspect ? <LockClosedIcon className="w-5 h-5" /> : <LockOpenIcon className="w-5 h-5" />}
@@ -333,7 +363,6 @@ export const DraggableImage: React.FC<DraggableImageProps> = ({ id, src, initial
 
             <button
               onClick={(e) => { e.stopPropagation(); onRemove(id); }}
-              onTouchEnd={(e) => { e.stopPropagation(); onRemove(id); }}
               className="control-btn bg-red-500/80 hover:bg-red-500 text-white p-2 rounded-full transition-all active:scale-95"
               title="Remove"
             >

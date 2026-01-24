@@ -5,29 +5,33 @@ interface DraggableTextProps {
   id: number;
   initialX: number;
   initialY: number;
+  initialContent?: string;
   zoom: number;
   onRemove: (id: number) => void;
+  onUpdate?: (id: number, data: any) => void;
 }
 
-export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, initialY, zoom, onRemove }) => {
+export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, initialY, initialContent, zoom, onRemove, onUpdate }) => {
   const [position, setPosition] = useState({ x: initialX, y: initialY });
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [isSelected, setIsSelected] = useState(false); 
+  const [isSelected, setIsSelected] = useState(false);
   const dragStartRef = useRef<{ x: number, y: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Focus on mount
   useLayoutEffect(() => {
     if (contentRef.current) {
-      contentRef.current.focus();
+      if (initialContent) contentRef.current.innerHTML = initialContent;
+      // Only focus if newly added (no content)
+      if (!initialContent) contentRef.current.focus();
     }
   }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging || !dragStartRef.current) return;
-      
+
       const dx = (e.clientX - dragStartRef.current.x) / zoom;
       const dy = (e.clientY - dragStartRef.current.y) / zoom;
 
@@ -35,14 +39,14 @@ export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, init
         x: prev.x + dx,
         y: prev.y + dy
       }));
-      
+
       dragStartRef.current = { x: e.clientX, y: e.clientY };
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!isDragging || !dragStartRef.current) return;
       e.preventDefault(); // Prevent scrolling
-      
+
       const touch = e.touches[0];
       const dx = (touch.clientX - dragStartRef.current.x) / zoom;
       const dy = (touch.clientY - dragStartRef.current.y) / zoom;
@@ -51,22 +55,29 @@ export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, init
         x: prev.x + dx,
         y: prev.y + dy
       }));
-      
+
       dragStartRef.current = { x: touch.clientX, y: touch.clientY };
     };
 
     const handleEnd = () => {
       setIsDragging(false);
       dragStartRef.current = null;
+      if (onUpdate) {
+        onUpdate(id, {
+          x: position.x,
+          y: position.y,
+          content: contentRef.current?.innerHTML || ''
+        });
+      }
     };
 
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-        if (contentRef.current && !contentRef.current.contains(e.target as Node)) {
-             const target = e.target as HTMLElement;
-             if (!target.closest('.control-btn')) {
-                 setIsSelected(false);
-             }
+      if (contentRef.current && !contentRef.current.contains(e.target as Node)) {
+        const target = e.target as HTMLElement;
+        if (!target.closest('.control-btn')) {
+          setIsSelected(false);
         }
+      }
     };
 
     if (isDragging) {
@@ -75,7 +86,7 @@ export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, init
       window.addEventListener('touchmove', handleTouchMove, { passive: false });
       window.addEventListener('touchend', handleEnd);
     }
-    
+
     window.addEventListener('mousedown', handleClickOutside);
     window.addEventListener('touchstart', handleClickOutside);
 
@@ -101,10 +112,10 @@ export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, init
     const touch = e.touches[0];
     dragStartRef.current = { x: touch.clientX, y: touch.clientY };
   };
-  
+
   const handleContainerClick = (e: React.MouseEvent | React.TouchEvent) => {
-      e.stopPropagation();
-      setIsSelected(true);
+    e.stopPropagation();
+    setIsSelected(true);
   };
 
   const showControls = isHovered || isDragging || isSelected;
@@ -118,7 +129,7 @@ export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, init
         maxWidth: '80%',
         zIndex: isDragging || showControls ? 50 : 10,
       }}
-      className="group pb-2" 
+      className="group pb-2"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleContainerClick}
@@ -127,7 +138,7 @@ export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, init
       {/* Controls Container */}
       {showControls && (
         <div className="absolute -top-9 left-0 right-0 flex justify-between items-end pb-1 no-print h-9 z-50">
-          <div 
+          <div
             className="control-btn bg-blue-600 text-white px-3 py-1 rounded-md text-xs uppercase font-bold tracking-wider cursor-grab active:cursor-grabbing flex items-center gap-1 shadow-md select-none touch-manipulation"
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
@@ -137,12 +148,12 @@ export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, init
           </div>
           <button
             onClick={(e) => {
-                e.stopPropagation();
-                onRemove(id);
+              e.stopPropagation();
+              onRemove(id);
             }}
             onTouchEnd={(e) => {
-                e.stopPropagation();
-                onRemove(id);
+              e.stopPropagation();
+              onRemove(id);
             }}
             className="control-btn bg-red-500 text-white p-1.5 rounded-md hover:bg-red-600 shadow-md transition-colors touch-manipulation"
             title="Remove text"
@@ -157,6 +168,15 @@ export const DraggableText: React.FC<DraggableTextProps> = ({ id, initialX, init
         ref={contentRef}
         contentEditable
         suppressContentEditableWarning
+        onBlur={() => {
+          if (onUpdate) {
+            onUpdate(id, {
+              x: position.x,
+              y: position.y,
+              content: contentRef.current?.innerHTML || ''
+            });
+          }
+        }}
         className={`outline-none min-w-[200px] min-h-[1.5em] p-2 border ${showControls ? 'border-dashed border-blue-400 bg-blue-50/10' : 'border-transparent'} transition-colors text-[#2c2c2c] font-serif text-[11pt] leading-relaxed whitespace-pre-wrap text-left empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400`}
         data-placeholder="Type content here..."
       />

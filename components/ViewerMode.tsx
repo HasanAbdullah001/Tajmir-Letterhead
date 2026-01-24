@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { letterService, SavedLetter } from '../services/LetterService';
+import { loadLetterToLocalStorage } from '../utils/letterSerializer';
 import { TajmirPage } from './TajmirPage';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -22,6 +23,8 @@ export const ViewerMode: React.FC = () => {
     const loadLetter = async (id: string) => {
         try {
             const data = await letterService.getLetter(id);
+            // Load the letter data into localStorage so TajmirPage can read it
+            loadLetterToLocalStorage(data);
             setLetter(data);
         } catch (err) {
             setError('Letter not found or failed to load');
@@ -102,7 +105,7 @@ export const ViewerMode: React.FC = () => {
                                 pageNumber={index + 1}
                                 zoom={1}
                                 action={null}
-                                margins={{ top: 48, right: 48, bottom: 48, left: 48 }}
+                                margins={letter.margins || { top: 96, right: 96, bottom: 96, left: 96 }}
                                 isActive={false}
                                 onFocus={() => { }}
                                 maxLines={29}

@@ -47,7 +47,7 @@ export const LetterListDialog: React.FC<LetterListDialogProps> = ({
     };
 
     const copyShareLink = (id: string) => {
-        const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+        const appUrl = (import.meta.env.VITE_APP_URL || window.location.origin).replace(/\/$/, '');
         const link = `${appUrl}/view/${id}`;
         navigator.clipboard.writeText(link);
         alert('Link copied to clipboard!');

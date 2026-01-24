@@ -20,6 +20,9 @@ export interface SavedLetter {
             src: string;
             x: number;
             y: number;
+            width?: number;
+            height?: number;
+            crop?: { t: number; r: number; b: number; l: number };
         }>;
     }>;
     sharedContent: {
@@ -32,6 +35,12 @@ export interface SavedLetter {
             title: string;
             address: string;
         };
+    };
+    margins?: {
+        top: number;
+        right: number;
+        bottom: number;
+        left: number;
     };
 }
 

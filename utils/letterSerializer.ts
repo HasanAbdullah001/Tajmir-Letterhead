@@ -39,14 +39,29 @@ export function serializeCurrentLetter(letterName: string): Omit<SavedLetter, 'l
         address: localStorage.getItem('tajmir_doc_footer_unified') || '950/B, Yakub-Ayub Building Amir Market, Khatungonj, Chattogram, 01843601712 or 01755880400',
     };
 
-    return {
+    const result: any = {
         letterName,
         pages,
         sharedContent: {
             header,
             footer,
         },
+        margins: {
+            top: 96, right: 96, bottom: 96, left: 96
+        }
     };
+
+    // Check if the margins are actually stored as a JSON object (as seen in EditorMode)
+    // The EditorMode stores it as 'tajmir_settings_margins' JSON string.
+    const marginsJson = localStorage.getItem('tajmir_settings_margins');
+    if (marginsJson) {
+        try {
+            const m = JSON.parse(marginsJson);
+            result.margins = m;
+        } catch (e) { }
+    }
+
+    return result;
 }
 
 export function loadLetterToLocalStorage(letter: SavedLetter): void {
@@ -80,4 +95,9 @@ export function loadLetterToLocalStorage(letter: SavedLetter): void {
     // Set shared footer content
     localStorage.setItem('tajmir_doc_footer_title', letter.sharedContent.footer.title);
     localStorage.setItem('tajmir_doc_footer_unified', letter.sharedContent.footer.address);
+
+    // Set margins
+    if (letter.margins) {
+        localStorage.setItem('tajmir_settings_margins', JSON.stringify(letter.margins));
+    }
 }
