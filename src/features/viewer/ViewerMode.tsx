@@ -14,11 +14,32 @@ export const ViewerMode: React.FC = () => {
     const [exporting, setExporting] = useState(false);
     const pagesRef = useRef<HTMLDivElement>(null);
 
+    // Mobile Zoom/Pan Logic - MOVED TO TOP to prevent Hook Error #310
+    const [zoom, setZoom] = useState(1);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const touchDist = useRef<number | null>(null);
+
     useEffect(() => {
         if (letterId) {
             loadLetter(letterId);
         }
     }, [letterId]);
+
+    // Initial Fit on Load
+    useEffect(() => {
+        const fitScreen = () => {
+            if (window.innerWidth < 800) { // Mobile breakpoint
+                const availableWidth = Math.max(window.innerWidth - 32, 300);
+                const scale = Math.max(0.3, availableWidth / 794);
+                setZoom(scale);
+            } else {
+                setZoom(1);
+            }
+        };
+        fitScreen();
+        window.addEventListener('resize', fitScreen);
+        return () => window.removeEventListener('resize', fitScreen);
+    }, []);
 
     const loadLetter = async (id: string) => {
         try {
@@ -65,47 +86,6 @@ export const ViewerMode: React.FC = () => {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-gray-100">
-                <div className="text-xl text-gray-600">Loading letter...</div>
-            </div>
-        );
-    }
-
-    if (error || !letter) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-gray-100">
-                <div className="text-center">
-                    <div className="text-xl text-red-600 mb-4">{error || 'Letter not found'}</div>
-                    <a href="/" className="text-blue-600 hover:underline">Go to Editor</a>
-                </div>
-            </div>
-        );
-    }
-
-    // Mobile Zoom/Pan Logic
-    const [zoom, setZoom] = useState(1);
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    // Initial Fit on Load
-    useEffect(() => {
-        const fitScreen = () => {
-            if (window.innerWidth < 800) { // Mobile breakpoint
-                const scale = (window.innerWidth - 32) / 794; // 794px is approx A4 width at 96dpi
-                setZoom(scale);
-            } else {
-                setZoom(1);
-            }
-        };
-        fitScreen();
-        window.addEventListener('resize', fitScreen);
-        return () => window.removeEventListener('resize', fitScreen);
-    }, []);
-
-    // Touch Zoom Logic (Pinch)
-    const touchDist = useRef<number | null>(null);
-
     const handleTouchStart = (e: React.TouchEvent) => {
         if (e.touches.length === 2) {
             const dist = Math.hypot(
@@ -135,6 +115,34 @@ export const ViewerMode: React.FC = () => {
         touchDist.current = null;
     };
 
+    // CONDITIONAL RENDERS MUST BE AFTER ALL HOOKS
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-gray-100">
+                <div className="text-xl text-gray-600">Loading letter...</div>
+            </div>
+        );
+    }
+
+    if (error || !letter) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-gray-100">
+                <div className="text-center">
+                    <div className="text-xl text-red-600 mb-4">{error || 'Letter not found'}</div>
+                    <a href="/" className="text-blue-600 hover:underline">Go to Editor</a>
+                </div>
+            </div>
+        );
+    }
+
+    if (!letter.pages || letter.pages.length === 0) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-gray-100">
+                <div className="text-xl text-red-600">No content available to display.</div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col h-screen bg-[#333] overflow-hidden">
             {/* PDF Export Button - Bottom Right */}
@@ -162,11 +170,12 @@ export const ViewerMode: React.FC = () => {
                         width: '100%',
                         display: 'flex',
                         flexDirection: 'column',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        minHeight: '100vh'
                     }}
                 >
                     {letter.pages.map((page, index) => (
-                        <div key={page.pageId} className="page-container shadow-2xl">
+                        <div key={page.pageId} className="page-container shadow-2xl relative bg-white">
                             <TajmirPage
                                 id={page.pageId}
                                 pageNumber={index + 1}
