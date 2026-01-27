@@ -4,12 +4,12 @@ import { LetterheadWorkspace } from './LetterheadWorkspace';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { PDFDocument } from 'pdf-lib';
-import { Toast } from './Toast';
+import { Toast } from '../../components/Toast';
 import { MergeManager } from './MergeManager';
-import { SaveLetterDialog } from './SaveLetterDialog';
-import { LetterListDialog } from './LetterListDialog';
-import { letterService } from '../services/LetterService';
-import { serializeCurrentLetter, loadLetterToLocalStorage } from '../utils/letterSerializer';
+import { SaveLetterDialog } from '../../components/SaveLetterDialog';
+import { LetterListDialog } from '../../components/LetterListDialog';
+import { letterService } from '../../services/LetterService';
+import { serializeCurrentLetter, loadLetterToLocalStorage } from '../../utils/letterSerializer';
 
 export function EditorMode() {
   const [zoom, setZoom] = useState(1);
@@ -188,7 +188,7 @@ export function EditorMode() {
 
       // Save
       const mergedPdfBytes = await pdfDoc.save();
-      const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
+      const blob = new Blob([mergedPdfBytes as any], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;

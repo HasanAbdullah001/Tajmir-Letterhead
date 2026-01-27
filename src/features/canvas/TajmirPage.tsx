@@ -239,14 +239,19 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
           ref={bodyRef}
           onInput={handleBodyInput}
           className="w-full h-full outline-none font-serif text-[11pt] leading-relaxed text-[#2c2c2c] text-left empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400"
-          contentEditable
+          contentEditable={isActive}
           suppressContentEditableWarning
           style={{
             whiteSpace: 'pre-wrap',
             overflow: 'hidden' // Hide scrollbars so we use clientHeight constraint
           }}
           data-placeholder={pageNumber === 1 ? "Start typing..." : ""}
-        ></div>
+        >
+          <style>{`
+            ul { list-style-type: disc !important; padding-left: 1.5em !important; margin: 0.5em 0; }
+            ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin: 0.5em 0; }
+          `}</style>
+        </div>
 
         {/* Draggable Images Layer */}
         {imageBlocks.map(block => (
@@ -308,7 +313,7 @@ export const TajmirPage = forwardRef<HTMLDivElement, TajmirPageProps>(({
         </div>
 
         {/* Decorative Bottom Horizontal Strip - Pinned Absolute */}
-        <div className="absolute bottom-0 left-0 w-full h-[12px] flex pointer-events-none">
+        <div className="absolute left-0 w-full h-[12px] flex pointer-events-none" style={{ bottom: '-1px' }}>
           <div className="flex-1" style={{ backgroundColor: 'rgb(47, 91, 16)' }}></div>
           <div className="flex-1" style={{ backgroundColor: 'rgb(166, 138, 63)' }}></div>
           <div className="flex-1 bg-[#006400]"></div>

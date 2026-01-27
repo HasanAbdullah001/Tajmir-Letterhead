@@ -109,7 +109,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
           <button
             onClick={onSaveLetter}
-            className="flex items-center justify-center gap-1 px-2 py-1.5 rounded text-xs md:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-blue-700 cursor-pointer"
+            className="flex items-center justify-center gap-1 px-2 py-1.5 rounded text-xs md:text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 cursor-pointer"
             title="Save Letter to Cloud"
           >
             💾

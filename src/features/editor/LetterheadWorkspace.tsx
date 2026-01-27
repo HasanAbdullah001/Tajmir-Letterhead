@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useRef, useState, useImperativeHandle } from 'react';
-import { TajmirPage } from './TajmirPage';
+import { TajmirPage } from '../canvas/TajmirPage';
 
 interface Margins {
   top: number;

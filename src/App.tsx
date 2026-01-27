@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { EditorMode } from './components/EditorMode';
-import { ViewerMode } from './components/ViewerMode';
+import { EditorMode } from './features/editor/EditorMode';
+import { ViewerMode } from './features/viewer/ViewerMode';
 
 export default function App() {
     return (

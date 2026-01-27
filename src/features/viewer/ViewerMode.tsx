@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { letterService, SavedLetter } from '../services/LetterService';
-import { loadLetterToLocalStorage } from '../utils/letterSerializer';
-import { TajmirPage } from './TajmirPage';
+import { letterService, SavedLetter } from '../../services/LetterService';
+import { loadLetterToLocalStorage } from '../../utils/letterSerializer';
+import { TajmirPage } from '../canvas/TajmirPage';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -84,8 +84,59 @@ export const ViewerMode: React.FC = () => {
         );
     }
 
+    // Mobile Zoom/Pan Logic
+    const [zoom, setZoom] = useState(1);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Initial Fit on Load
+    useEffect(() => {
+        const fitScreen = () => {
+            if (window.innerWidth < 800) { // Mobile breakpoint
+                const scale = (window.innerWidth - 32) / 794; // 794px is approx A4 width at 96dpi
+                setZoom(scale);
+            } else {
+                setZoom(1);
+            }
+        };
+        fitScreen();
+        window.addEventListener('resize', fitScreen);
+        return () => window.removeEventListener('resize', fitScreen);
+    }, []);
+
+    // Touch Zoom Logic (Pinch)
+    const touchDist = useRef<number | null>(null);
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        if (e.touches.length === 2) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            touchDist.current = dist;
+        }
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (e.touches.length === 2 && touchDist.current !== null) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            const delta = dist - touchDist.current;
+            if (Math.abs(delta) > 5) {
+                const newZoom = Math.max(0.2, Math.min(3.0, zoom + delta * 0.005));
+                setZoom(newZoom);
+                touchDist.current = dist;
+            }
+        }
+    };
+
+    const handleTouchEnd = () => {
+        touchDist.current = null;
+    };
+
     return (
-        <div className="flex flex-col h-screen bg-[#333]">
+        <div className="flex flex-col h-screen bg-[#333] overflow-hidden">
             {/* PDF Export Button - Bottom Right */}
             <button
                 onClick={handleExportPDF}
@@ -96,14 +147,30 @@ export const ViewerMode: React.FC = () => {
             </button>
 
             {/* Pages Container */}
-            <div className="flex-grow overflow-auto bg-[#525659] p-8">
-                <div ref={pagesRef} className="flex flex-col items-center gap-8">
+            <div
+                className="flex-grow overflow-auto bg-[#525659] p-4 md:p-8 touch-pan-x touch-pan-y"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+            >
+                <div
+                    ref={pagesRef}
+                    className="flex flex-col items-center gap-8 origin-top-left transition-transform duration-100 ease-out"
+                    style={{
+                        transform: `scale(${zoom})`,
+                        transformOrigin: 'top center',
+                        width: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center'
+                    }}
+                >
                     {letter.pages.map((page, index) => (
-                        <div key={page.pageId} className="page-container">
+                        <div key={page.pageId} className="page-container shadow-2xl">
                             <TajmirPage
                                 id={page.pageId}
                                 pageNumber={index + 1}
-                                zoom={1}
+                                zoom={zoom}
                                 action={null}
                                 margins={letter.margins || { top: 96, right: 96, bottom: 96, left: 96 }}
                                 isActive={false}
